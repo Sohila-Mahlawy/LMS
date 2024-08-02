@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            background: #DFD3C3;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #543310;
+            color: #ecf0f1;
+            padding: 20px;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            transform: translateX(0);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar.closed {
+            transform: translateX(-100%);
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+        }
+
+        .sidebar ul li {
+            margin: 15px 0;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+
+        .sidebar ul li:last-child {
+            border-bottom: none;
+        }
+
+        .sidebar ul li a {
+            color: #ecf0f1;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+        }
+
+        .sidebar ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-sections {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            flex: 1;
+            background-color: #C7B198;
+            padding: 20px;
+            box-sizing: border-box;
+            margin: 0 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: #543310;
+        }
+
+        .section h2 {
+            text-align: center;
+        }
+
+        .section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .section ul li {
+            margin: 10px 0;
+        }
+
+        .students-section {
+            text-align: center;
+            background-color: #C7B198;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: #543310;
+        }
+
+        .latest-news-section {
+            flex: 1;
+            background-color: #C7B198;
+            padding: 20px;
+            box-sizing: border-box;
+            margin: 0 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: #543310;
+        }
+
+        .latest-news-section h2 {
+            text-align: center;
+        }
+
+        .latest-news-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .latest-news-section ul li {
+            margin: 10px 0;
+        }
+
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #543310;
+            color: #ecf0f1;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 1;
+            border-radius: 5px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+
+        .modal-content select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .modal-content button {
+            background-color: #543310;
+            color: #ecf0f1;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .modal-content button:hover {
+            background-color: #76502c;
+        }
+
+        .modal-content .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .modal-content .close-btn:hover,
+        .modal-content .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .students-list, .teacher-details {
+            margin-top: 20px;
+            background-color: #C7B198;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: #543310;
+        }
+
+        .messages {
+            flex: 1;
+            background-color: transparent;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 0;
+            float: right;
+        }
+
+        .messages::before {
+            content: "";
+            display: flex;
+            width: 30px;
+            height: 30px;
+            align-items: left;
+            margin-right: 5px;
+            background-image: url("static/assets/images/notification.png");
+            background-size: contain;
+        }
+    </style>
+</head>
+
+
+{% extends "admin_base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+        <div>
+            <a href="/messages">
+                <button class="messages"></button>
+            </a>
+            <div class="dashboard-header">
+                <h1 style="color: #543310;">Dashboard</h1>
+            </div>
+            <div class="dashboard-sections">
+                <div class="section">
+                    <h2>Latest News</h2>
+                    <ul>
+                        {% for news_item in latest_news %}
+
+                            {{ news_item.title }} - {{ news_item.content }}
+                            <a href="/edit_news/{{ news_item.id }}">
+                                <button style="background-color: #543310; color: #ecf0f1; border: none; padding: 5px; cursor: pointer;">Edit</button>
+                            </a>
+
+                        {% endfor %}
+                    </ul>
+                    <a href="/create_news">
+                        <button style="background-color: #543310; color: #ecf0f1; border: none; padding: 10px; cursor: pointer;">Create News</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="student-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeStudentModal()">&times;</span>
+            <h2>Select Grade and Class</h2>
+            <select id="grade-select">
+                <option value="">Select Grade</option>
+                <!-- Grade options will be generated by JavaScript -->
+            </select>
+            <select id="class-select">
+                <option value="">Select Class</option>
+                <!-- Class options will be generated by JavaScript -->
+            </select>
+            <button onclick="fetchStudentDetails()">Show Students</button>
+            <div id="students-details" class="students-list" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Teacher Modal -->
+    <div id="teacher-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeTeacherModal()">&times;</span>
+            <h2>Select Teacher</h2>
+            <select id="teacher-select">
+                <option value="">Select Teacher</option>
+                 Teacher options will be generated by JavaScript
+            </select>
+            <button onclick="fetchTeacherDetails()">Show Details</button>
+            <div id="teacher-details" class="teacher-details" style="display: none;"></div>
+        </div>
+    </div>
+    <script>
+function toggleSidebar() {
+    var sidebar = document.getElementById('sidebar');
+    var mainContent = document.getElementById('main-content');
+    sidebar.classList.toggle('closed');
+    mainContent.classList.toggle('expanded');
+}
+
+function showStudentModal() {
+    document.getElementById('student-modal').style.display = 'block';
+    populateGrades();
+    populateClasses();
+}
+
+function showTeacherModal() {
+    document.getElementById('teacher-modal').style.display = 'block';
+    populateTeachers();
+}
+
+function populateGrades() {
+    var gradeSelect = document.getElementById('grade-select');
+    var grades = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    grades.forEach(grade => {
+        var option = document.createElement('option');
+        option.value = grade;
+        option.textContent = `Grade ${grade}`;
+        gradeSelect.appendChild(option);
+    });
+}
+
+function populateClasses() {
+    var classSelect = document.getElementById('class-select');
+    var classes = ['A', 'B', 'C', 'D'];
+    classes.forEach(cls => {
+        var option = document.createElement('option');
+        option.value = cls;
+        option.textContent = `Class ${cls}`;
+        classSelect.appendChild(option);
+    });
+}
+
+function populateTeachers() {
+    var teacherSelect = document.getElementById('teacher-select');
+    fetch('/api/teachers')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(teacher => {
+                var option = document.createElement('option');
+                option.value = teacher.id;
+                option.textContent = teacher.name;
+                teacherSelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching teachers:', error));
+}
+
+function fetchStudentDetails() {
+    var grade = document.getElementById('grade-select').value;
+    var cls = document.getElementById('class-select').value;
+
+    if (grade && cls) {
+        fetch(`/api/students?grade=${grade}&class=${cls}`)
+            .then(response => response.json())
+            .then(data => {
+                var studentsList = document.getElementById('students-details');
+                studentsList.innerHTML = '<h3>Student Details</h3>';
+                data.forEach(student => {
+                    var studentDiv = document.createElement('div');
+                    studentDiv.textContent = `Name: ${student.name}, Email: ${student.email}`;
+                    var viewButton = document.createElement('button');
+                    viewButton.textContent = 'View Details';
+                    viewButton.onclick = () => {
+                        window.location.href = `/student_details/${student.id}`;
+                    };
+                    studentDiv.appendChild(viewButton);
+                    studentsList.appendChild(studentDiv);
+                });
+                studentsList.style.display = 'block';
+            })
+            .catch(error => console.error('Error fetching student details:', error));
+    } else {
+        alert('Please select both grade and class');
+    }
+}
+
+
+function fetchTeacherDetails() {
+    var teacherId = document.getElementById('teacher-select').value;
+
+    if (teacherId) {
+        window.location.href = `/teacher_details/${teacherId}`;
+    } else {
+        alert('Please select a teacher');
+    }
+}
+
+
+function closeStudentModal() {
+    document.getElementById('student-modal').style.display = 'none';
+}
+
+function closeTeacherModal() {
+    document.getElementById('teacher-modal').style.display = 'none';
+}
+
+    </script>
+{% endblock %}

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../static/css/simplebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@100;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/feather.css">
+    <link rel="stylesheet" href="../static/css/fullcalendar.css">
+    <link rel="stylesheet" href="../static/css/select2.css">
+    <link rel="stylesheet" href="../static/css/dropzone.css">
+    <link rel="stylesheet" href="../static/css/uppy.min.css">
+    <link rel="stylesheet" href="../static/css/jquery.steps.css">
+    <link rel="stylesheet" href="../static/css/jquery.timepicker.css">
+    <link rel="stylesheet" href="../static/css/quill.snow.css">
+    <link rel="stylesheet" href="../static/css/daterangepicker.css">
+    <style>
+        body {
+            background: #DFD3C3;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #543310;
+            color: #ecf0f1;
+            padding: 20px;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            transform: translateX(0);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        .sidebar.closed {
+            transform: translateX(-100%);
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+        }
+
+        .sidebar ul li {
+            margin: 15px 0;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 5px;
+            position: relative; /* Added for badge positioning */
+        }
+
+        .sidebar ul li:last-child {
+            border-bottom: none;
+        }
+
+        .sidebar ul li a {
+            color: #ecf0f1;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+        }
+
+        .sidebar ul li a:hover {
+            text-decoration: underline;
+        }
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .posts {
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            color: #543310;
+        }
+
+        .post {
+            background-color: #C7B198;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .post h2 {
+            margin: 0 0 30px 0;
+        }
+
+        .post a {
+            color: #543310;
+            ;
+        }
+
+        .post a:hover {
+            text-decoration: none;
+        }
+
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #543310;
+            color: #ecf0f1;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 1001; /* Ensure the button is above all other elements */
+            border-radius: 5px;
+        }
+
+        .add-lesson-btn {
+            background-color: #543310;
+            color: #ecf0f1;
+            border: none;
+            padding: 10px 20px;
+            margin-left: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .add-lesson-btn:hover {
+            background-color: #725238;
+        }
+
+        .add-quiz-btn {
+            background-color: #543310 !important;
+            color: #ecf0f1 !important;
+            border: none;
+            padding: 7px 10px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .add-quiz-btn:hover {
+            background-color: #725238 !important;
+        }
+
+        .take-quiz-btn {
+            background-color: #725238;
+            color: #ecf0f1;
+            border: none;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 20px;
+        }
+
+        .take-quiz-btn:hover {
+            background-color: #543310;
+        }
+
+        /* Media Queries for Responsive Design */
+        @media (max-width: 768px) {
+            .section {
+                flex-basis: calc(100% - 20px); /* Full width on smaller screens */
+                margin: 10px 0; /* Adjust margin for spacing */
+            }
+
+            .sidebar {
+                position: fixed;
+                transform: translateX(-100%);
+                width: 250px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .dashboard-sections {
+                flex-direction: column;
+            }
+
+            .section {
+                width: 100%; /* Full width on smaller screens */
+                margin: 10px 0; /* Adjust margin for spacing */
+            }
+        }
+
+        .post {
+            position: relative;
+            padding-bottom: 60px; /* Ensure there is space for the buttons */
+        }
+
+        .button-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .button-container button,
+        .button-container a {
+            display: inline-block;
+            margin: 5px 0;
+        }
+
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #C7B198;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            border: 1px solid #543310;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #543310;
+            color: #ecf0f1;
+        }
+
+        td input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            color: #543310;
+        }
+
+        td input:focus {
+            outline: none;
+        }
+
+                                  .badge {
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            padding: 5px 10px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+                .messages {
+            flex: 1; /* Make messages section take up remaining space */
+            background-color: transparent;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 0;
+            float: right; /* Make it float to the right */
+        }
+
+        .messages::before {
+            content: "";
+            display: flex; /* Change to flexbox for side-by-side layout */
+            width: 30px;  /* Increase width to make icon bigger */
+            height: 30px; /* Increase height to make icon bigger */
+            align-items: left; /* Vertically align icon and text */
+            margin-right: 5px; /* Reduce gap between icon and text (optional) */
+            background-image: url("static/assets/images/notification.png");
+            background-size: contain; /* Maintain aspect ratio */
+        }
+
+    </style>
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <div class="sidebar" id="sidebar">
+            <div class="logo-container">
+                <a href="../templates/index.html">
+                    <img src="../static/assets/images/logo.png" alt="School Logo" style="width: 100px; height: auto;">
+                </a>
+            </div>
+            <ul>
+                <li><a href="/dashboard"><i class="feather icon-home"></i><span class="link-text">Dashboard</span></a></li>
+                <li><a href="/view_timetable"><i class="feather icon-calendar"></i><span class="link-text">Timetable</span></a></li>
+                <li><a href="/my_subjects"><i class="feather icon-book"></i><span class="link-text">My Subjects</span></a></li>
+                <li><a href="/my_teachers"><i class="feather icon-user"></i><span class="link-text">My Teachers</span></a></li>
+                <li><a href="#"><i class="feather icon-check-square"></i><span class="link-text">Attendance</span></a></li>
+                <li><a href="/zoom"><i class="feather icon-users"></i><span class="link-text">Sessions</span></a></li>
+                <li><a href="#"><i class="feather icon-file-text"></i><span class="link-text">Assessments & Assignments</span></a></li>
+                <li><a href="#"><i class="feather icon-alert-circle"></i><span class="link-text">Remarks & Actions</span></a></li>
+                <li><a href="/quizzes_surveys"><i class="feather icon-list"></i><span class="link-text">Quizzes/Surveys</span></a></li>
+                <li class="notification"><a href="/messages"><i class="feather icon-list"></i><span class="link-text">Messages</span><span class="badge" id="message-badge">0</span></a></li>
+                <li><a href="/student_marks"><i class="feather icon-file-text"></i><span class="link-text">Term Marks</span></a></li>
+
+            </ul>
+        </div>
+
+<div class="container">
+    <div class="main-content">
+        <div class="content">
+            <h1>Grade Marks</h1>
+
+                    <form method="get" action="{{ url_for('grade_marks') }}">
+
+                        <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject Name</th>
+                    <th>Behavior</th>
+                    <th>Oral Exam</th>
+                    <th>Written Exam</th>
+                    <th>Commitments</th>
+                    <th>Attendance</th>
+                    <th>Assignments</th>
+                    <th>Class Projects</th>
+                    <th>Subject Projects</th>
+                    <th>Participation</th>
+                    <th>Class Work</th>
+                    <th>Total Marks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subject, grade in subjects_grades %}
+                <tr>
+                    <td>{{ subject.name }}</td>
+                    <td>{{ grade.behavior }}</td>
+                    <td>{{ grade.oral_exam }}</td>
+                    <td>{{ grade.written_exam }}</td>
+                    <td>{{ grade.comments }}</td>
+                    <td>{{ grade.attendance }}</td>
+                    <td>{{ grade.assignments }}</td>
+                    <td>{{ grade.class_projects }}</td>
+                    <td>{{ grade.subject_projects }}</td>
+                    <td>{{ grade.participation }}</td>
+                    <td>{{ grade.class_work }}</td>
+                    <td>{{ grade.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+                        </form>
+        </div>
+    </div>
+</div>
+
+
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            var mainContent = document.getElementById('main-content');
+            sidebar.classList.toggle('closed');
+            mainContent.classList.toggle('full-width');
+        }
+
+        function calculateTotal(studentId) {
+            var total = 0;
+            var inputs = document.querySelectorAll(input[name^="${studentId}"]);
+            inputs.forEach(function(input) {
+                total += parseFloat(input.value) || 0;
+            });
+            document.getElementById(totalMarks${studentId}).innerText = total;
+        }
+    </script>
+</body>
+
+
+
+</html>

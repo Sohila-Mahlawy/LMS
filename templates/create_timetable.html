@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Timetable</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #DFD3C3;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    .container {
+        background-color:#DFD3C3;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 300px;
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+
+
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+{% extends "admin_base.html" %}
+
+{% block title %}Create Timetable{% endblock %}
+
+{% block content %}
+    <div class="timetable-container">
+        <h1 class="h1">Create Timetable</h1>
+        <form method="post" action="/timetable">
+            <label for="subject_name">Subject:</label>
+            <input type="text" id="subject_name" name="subject_name" required>
+
+            <label for="teacher_email">Teacher Email:</label>
+            <select id="teacher_email" name="teacher_email" required>
+                {% for teacher in teachers %}
+                    <option value="{{ teacher.email }}">{{ teacher.email }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="day_of_week">Day of Week:</label>
+            <select id="day_of_week" name="day_of_week" required>
+                <option value="Sunday">Sunday</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+            </select>
+
+            <label for="time_of_day">Time of Day (HH:MM):</label>
+            <input type="time" id="time_of_day" name="time_of_day" required>
+
+            <label for="grade">Grade:</label>
+            <input type="text" id="grade" name="grade" required>
+
+            <label for="Class">Class:</label>
+            <input type="text" id="Class" name="Class" required>
+
+            <button class="timetable-button" type="submit">Add Entry</button>
+        </form>
+    </div>
+{% endblock %}
+</body>
+</html>

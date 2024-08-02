@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS SCHOOL - My Students</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link rel="stylesheet" href="../static/css/simplebar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@100;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/feather.css">
+    <link rel="stylesheet" href="../static/css/fullcalendar.css">
+    <link rel="stylesheet" href="../static/css/select2.css">
+    <link rel="stylesheet" href="../static/css/dropzone.css">
+    <link rel="stylesheet" href="../static/css/uppy.min.css">
+    <link rel="stylesheet" href="../static/css/jquery.steps.css">
+    <link rel="stylesheet" href="../static/css/jquery.timepicker.css">
+    <link rel="stylesheet" href="../static/css/quill.snow.css">
+    <link rel="stylesheet" href="../static/css/daterangepicker.css">
+    <style>
+        body {
+            background: #DFD3C3;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #543310;
+            color: #ecf0f1;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            transform: translateX(0);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            z-index: 100;
+        }
+
+        .sidebar.closed {
+            transform: translateX(-100%);
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+        }
+
+        .sidebar ul li {
+            margin: 15px 0;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+
+        .sidebar ul li:last-child {
+            border-bottom: none;
+        }
+
+        .sidebar ul li a {
+            color: #ecf0f1;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .sidebar ul li a i {
+            margin-right: 10px;
+        }
+
+        .add-subject-btn {
+            background-color: #C7B198;
+            color: #543310;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            border-radius: 5px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .add-subject-btn:hover {
+            background-color: #AF8F6F;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-sections {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            background-color: #C7B198;
+            padding: 30px; /* Increased padding for larger content area */
+            box-sizing: border-box;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: #543310;
+            margin: 20px 0; /* Added margin to separate sections */
+            flex: 1; /* Make section grow to fill available space */
+            max-width: 100%; /* Ensure section does not overflow */
+        }
+
+
+        .section h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .section th, .section td {
+            border: 1px solid #543310;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .section th {
+            background-color: #543310;
+            color: #ecf0f1;
+        }
+
+        .section td {
+            background-color: #DFD3C3;
+            color: #543310;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 18px;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+        }
+
+        thead {
+            background-color: #AF8F6F;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                flex-basis: calc(100% - 20px);
+                margin: 10px 0;
+            }
+
+            .sidebar {
+                position: fixed;
+                transform: translateX(-100%);
+                width: 250px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .dashboard-sections {
+                flex-direction: column;
+            }
+
+            .section {
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+
+                .messages {
+            flex: 1; /* Make messages section take up remaining space */
+            background-color: transparent;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 0;
+            float: right; /* Make it float to the right */
+        }
+
+        .messages::before {
+            content: "";
+            display: flex; /* Change to flexbox for side-by-side layout */
+            width: 30px;  /* Increase width to make icon bigger */
+            height: 30px; /* Increase height to make icon bigger */
+            align-items: left; /* Vertically align icon and text */
+            margin-right: 5px; /* Reduce gap between icon and text (optional) */
+            background-image: url("static/assets/images/notification.png");
+            background-size: contain; /* Maintain aspect ratio */
+        }
+                .badge {
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            padding: 5px 10px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+{% extends "teacher_base.html" %}
+
+{% block content %}
+    {% if current_user.role == "teacher" %}
+        <main role="main" >
+            <div class="dashboard-section">
+                <div class="row justify-content-center">
+                    <div class="col-md-10">
+                        <div class="card">
+                            <div class="dashboard-header">
+                                <h1>Student Information</h1>
+                            </div>
+                            <div class="dashboard-sections">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Grade</th>
+                                            <th>Class</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in students %}
+                                        <tr>
+                                            <td><a href="{{ url_for('send_message', email=student.email) }}">{{ student.name }}</a></td>
+                                            <td>{{ student.email }}</td>
+                                            <td>{{ student.grade }}</td>
+                                            <td>{{ student.Class }}</td>
+                                            <td>
+                                                <a href="{{ url_for('send_message', email=student.email) }}">Send Message</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+  {% else %}
+            <div class="main-content" id="main-content">
+            <a href="/messages">
+                <button class="messages"></button>
+            </a>
+            <div class="dashboard-header">
+                    <h1>My Students</h1>
+            </div>
+                {% if current_user.role == "admin" %}
+                    <a href="{{ url_for('add_user') }}">
+        <button class="add-subject-btn">Add New Student</button>
+    </a>
+                                {% endif %}
+            <div class="dashboard-sections">
+
+                <div class="section">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Grade</th>
+                                <th>Class</th>
+                                <th>Parent Email</th>
+                                <th>Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.email }}</td>
+                                <td>{{ student.grade }}</td>
+                                <td>{{ student.Class }}</td>
+                                <td>{{ student.parent_email }}</td>
+                                <td><a href="{{ url_for('edit_student', student_id=student.id) }}">Edit</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% endif %}
+
+
+{% endblock %}
+</body>
+</html>
