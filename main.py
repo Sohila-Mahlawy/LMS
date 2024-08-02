@@ -954,7 +954,7 @@ def take_quiz(quiz_id):
 
         return render_template('take_quiz.html', quiz=quiz, questions=questions,student_id=current_user.id)
     else:
-        return redirect()
+        return redirect("/unauthorized")
 
 
 
