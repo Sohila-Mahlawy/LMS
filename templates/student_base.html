@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Subjects</title>
+    <title>Student Base</title>
     <style>
         body {
             background: #DFD3C3;
@@ -13,6 +13,7 @@
             display: flex;
             height: 100vh;
             overflow-x: hidden;
+
         }
 
         .container {
@@ -232,10 +233,8 @@
                 <li><a href="/view_timetable"><i class="feather icon-calendar"></i><span class="link-text">Timetable</span></a></li>
                 <li><a href="/my_subjects"><i class="feather icon-book"></i><span class="link-text">My Subjects</span></a></li>
                 <li><a href="/my_teachers"><i class="feather icon-user"></i><span class="link-text">My Teachers</span></a></li>
-                <li><a href="#"><i class="feather icon-check-square"></i><span class="link-text">Attendance</span></a></li>
+                <li><a href="/attendance"><i class="feather icon-check-square"></i><span class="link-text">Attendance</span></a></li>
                 <li><a href="/zoom"><i class="feather icon-users"></i><span class="link-text">Sessions</span></a></li>
-                <li><a href="#"><i class="feather icon-file-text"></i><span class="link-text">Assessments & Assignments</span></a></li>
-                <li><a href="#"><i class="feather icon-alert-circle"></i><span class="link-text">Remarks & Actions</span></a></li>
                 <li><a href="/quizzes_surveys"><i class="feather icon-list"></i><span class="link-text">Quizzes/Surveys</span></a></li>
                 <li class="notification"><a href="/messages"><i class="feather icon-list"></i><span class="link-text">Messages</span><span class="badge" id="message-badge">0</span></a></li>
                 <li><a href="/student_marks/{{ student_id }}"><i class="feather icon-file-text"></i><span class="link-text">Term Marks</span></a></li>

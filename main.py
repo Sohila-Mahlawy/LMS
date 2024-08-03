@@ -586,28 +586,44 @@ def download_file(filename):
 @app.route("/edit_lesson/<int:lesson_id>", methods=["GET", "POST"])
 @login_required
 def edit_lesson(lesson_id):
-    lesson = Lessons.query.get(lesson_id)
+    lesson = Lessons.query.get_or_404(lesson_id)
     video = Videos.query.filter_by(lesson_id=lesson_id).first()
-    if lesson is None:
-        flash("Lesson not found!", "danger")
-        return redirect(url_for("view_subject", subject_id=lesson.subject_id))  # Adjust URL based on your logic
+    files = Files.query.filter_by(lesson_id=lesson_id).all()
 
     if request.method == "POST":
-        lesson.name = request.form["name"]
-        video.url = request.form['video']
+        lesson.name = request.form.get("name", lesson.name)
+        video.url = request.form.get("video", video.url) if video else None
 
+        # Handle file upload
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+                # Save the new file
+                file.save(file_path)
+
+                # Update or create file record
+                existing_file = Files.query.filter_by(lesson_id=lesson_id).first()
+                if existing_file:
+                    existing_file.name = filename
+                    existing_file.path = filename
+                else:
+                    new_file = Files(name=filename, path=filename, lesson_id=lesson_id)
+                    db.session.add(new_file)
 
         try:
             db.session.commit()
             flash("Lesson edited successfully!", "success")
-            return redirect(url_for("view_subject", subject_id=lesson.subject_id))  # Adjust URL based on your logic
+            return redirect(url_for("view_subject", subject_id=lesson.subject_id))
         except Exception as e:
             db.session.rollback()
             flash(f"Error editing lesson: {e}", "danger")
 
-    return render_template("edit_lesson.html", lesson=lesson,video=video)
+    return render_template("edit_lesson.html", lesson=lesson, video=video, files=files,user=current_user)
 
-# app.py
+
 
 @app.route('/edit_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
@@ -620,14 +636,15 @@ def edit_quiz(quiz_id):
 
     if request.method == 'POST':
         # Update quiz details
-        quiz.name = request.form['name']
-        quiz.description = request.form['description']
+        quiz.name = request.form.get('name', '')
+        quiz.description = request.form.get('description', '')
         db.session.commit()
 
         # Process each question
         for question in quiz_questions:
-            question_text = request.form.get(f'questionText{question.id}', '')
-            question_type = request.form.get(f'questionType{question.id}', '')
+            question_id = question.id
+            question_text = request.form.get(f'questionText{question_id}', '')
+            question_type = request.form.get(f'questionType{question_id}', '')
 
             # Update question attributes
             question.question_text = question_text
@@ -635,24 +652,33 @@ def edit_quiz(quiz_id):
 
             if question_type == 'multiple':
                 choices = [
-                    request.form.get(f'choice{question.id}_{i + 1}', '')
+                    request.form.get(f'choice{question_id}_{i + 1}', '')
                     for i in range(4)  # Assuming maximum 4 choices
                 ]
                 question.options = json.dumps(choices) if choices else json.dumps([])
-                correct_answer_index = request.form.get(f'correct_answer{question.id}', '1')
-                question.correct_answer = choices[int(correct_answer_index) - 1]
+                correct_answer_index = request.form.get(f'correct_answer{question_id}', '0')
+                question.correct_answer = choices[int(correct_answer_index)] if choices else ''
 
             elif question_type == 'true_false':
                 question.options = json.dumps(['True', 'False'])
-                question.correct_answer = request.form.get(f'trueFalse{question.id}', 'true')
+                question.correct_answer = request.form.get(f'trueFalse{question_id}', 'True')
 
             elif question_type == 'short_answer':
                 question.options = json.dumps([])
-                question.correct_answer = request.form.get(f'short_answer{question.id}', '')
+                question.correct_answer = request.form.get(f'short_answer{question_id}', '')
+
+            elif question_type == 'complete':
+                question.options = json.dumps([])
+                question.correct_answer = request.form.get(f'complete_answer{question_id}', '')
 
         db.session.commit()
         flash("Quiz updated successfully!", "success")
         return redirect(url_for('edit_quiz', quiz_id=quiz_id))
+
+    # Convert options from JSON string to Python list for the template
+    for question in quiz_questions:
+        if question.options:
+            question.options = json.loads(question.options)
 
     return render_template('edit_quiz.html', quiz=quiz, quiz_questions=quiz_questions)
 
@@ -795,10 +821,9 @@ def create_lesson(subject_id):
             lesson_name = request.form['lessonName']
             video_link = request.form['videoLink']
             grade = request.form['grade']
-            content = request.form['content']
 
 
-            if not lesson_name or not grade or not content:
+            if not lesson_name or not grade:
                 return jsonify({'error': 'Lesson name, grade, and content are required'}), 400
 
             # Create a new lesson
@@ -954,7 +979,7 @@ def take_quiz(quiz_id):
 
         return render_template('take_quiz.html', quiz=quiz, questions=questions,student_id=current_user.id)
     else:
-        return redirect("/unauthorized")
+        return redirect()
 
 
 
@@ -1698,13 +1723,15 @@ def student_details(student_id):
     student = Students.query.get_or_404(student_id)
     return render_template('student_details.html', student=student,student_id=student_id)
 
-
 @app.route('/attendance', methods=['GET', 'POST'])
 @login_required
 def attendance():
+    logging.info(f"Current user role: {current_user.role}")
+
     attendance_dict = {}
     students = []
     selected_grade = request.args.get('grade', type=int)
+    attendance_records = {}  # This will store attendance records indexed by student_id
 
     if current_user.role == "teacher":
         teacher_subjects = Subjects.query.filter_by(teacher_email=current_user.email).all()
@@ -1719,7 +1746,15 @@ def attendance():
         else:
             students = Students.query.all()
 
-    # Calculate total absences, permissions, total attendance, and total late from the beginning of the year for each student
+    elif current_user.role == "student":
+        # If the current user is a student, we get their student record
+        student_record = Students.query.filter_by(user_id=current_user.id).first()
+        if student_record:
+            students.append(student_record)
+        else:
+            return redirect(url_for('dashboard'))
+
+    # Fetch the attendance record for today
     start_of_year = date(date.today().year, 1, 1)
     absences_count = {}
     permissions_count = {}
@@ -1736,6 +1771,25 @@ def attendance():
         total_late_count[student.id] = Attendance.query.filter_by(student_id=student.id, late=True)\
                                                         .filter(Attendance.date >= start_of_year).count()
 
+        # Fetch all attendance records where the student was absent
+        absence_records = Attendance.query.filter_by(student_id=student.id, absent=True)\
+                                          .filter(Attendance.date >= start_of_year).all()
+        attendance_records[student.id] = []
+        for record in absence_records:
+            attendance_records[student.id].append({
+                'date': record.date,
+                'attended': record.attended,
+                'late': record.late,
+                'absent': record.absent,
+                'permission': record.permission,
+                'image_filename': record.image_filename
+            })
+
+    if current_user.role == "student":
+        return render_template('student_attendance.html', student=students[0], attendance_records=attendance_records,
+                               absences_count=absences_count, permissions_count=permissions_count,
+                               total_attendance_count=total_attendance_count, total_late_count=total_late_count)
+
     if request.method == 'POST':
         for student in students:
             student_id = student.id
@@ -1743,61 +1797,73 @@ def attendance():
             attended = status == 'attended'
             late = status == 'late'
             absent = status == 'absent'
+            permission = f'permission_{student_id}' in request.form
+
+            logging.info(f"Processing student {student_id} - Status: {status} - Permission: {permission}")
 
             # Initialize image filename
             image_filename = None
 
             # Handle image upload if permission is given
-            if f'image_{student_id}' in request.files:
+            if permission and f'image_{student_id}' in request.files:
                 image = request.files[f'image_{student_id}']
                 if image and image.filename:
                     image_filename = secure_filename(image.filename)
-                    image_path = os.path.join(app.config['ATTENDANCE_FOLDER'], image_filename)
-                    image.save(image_path)
+                    image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+                    logging.info(f"Image saved for student {student_id}: {image_filename}")
 
-            # Check if an existing record is available
-            existing_record = Attendance.query.filter_by(student_id=student_id, date=date.today()).first()
-            if existing_record:
-                existing_record.attended = attended
-                existing_record.late = late
-                existing_record.absent = absent
-                if image_filename:
-                    existing_record.image_filename = image_filename
-                # Preserve existing photo if new one is not provided
-                if not image_filename:
-                    image_filename = existing_record.image_filename
-                existing_record.image_filename = image_filename
+            # Find existing attendance record or create a new one
+            attendance_record = Attendance.query.filter_by(student_id=student_id, date=date.today()).first()
+            if attendance_record:
+                attendance_record.attended = attended
+                attendance_record.late = late
+                attendance_record.absent = absent
+                attendance_record.permission = permission
+                attendance_record.image_filename = image_filename if image_filename else attendance_record.image_filename
             else:
-                # Create new attendance record
                 attendance_record = Attendance(
                     student_id=student_id,
                     date=date.today(),
                     attended=attended,
                     late=late,
                     absent=absent,
-                    image_filename=image_filename,
-                    student_name=student.name
+                    permission=permission,
+                    image_filename=image_filename
                 )
                 db.session.add(attendance_record)
 
         db.session.commit()
-        flash('Attendance submitted successfully', 'success')
-        return redirect(url_for('attendance', grade=selected_grade))
+        flash('Attendance records updated successfully.', 'success')
+        return redirect(url_for('attendance'))
 
-    # Calculate total absences and permissions from the beginning of the year
-    absents_count = Attendance.query.filter(Attendance.date >= start_of_year, Attendance.absent == True).count()
-    permissions_count_total = Attendance.query.filter_by(date=date.today(), permission=True).count()
+    if current_user.role == 'teacher':
+        template = 'attendance.html'
+    else:
+        template = 'admin_attendance.html'
 
-    return render_template('admin_attendance.html', students=students, absences_count=absences_count, permissions_count=permissions_count, total_attendance_count=total_attendance_count, total_late_count=total_late_count, permissions_count_total=permissions_count_total, selected_date=date.today(), grades=list(range(1, 13)), selected_grade=selected_grade)
+    logging.info(f"Using template: {template}")
+
+    return render_template(
+        template,
+        students=students,
+        attendance_records=attendance_records,
+        absences_count=absences_count,
+        permissions_count=permissions_count,
+        total_attendance_count=total_attendance_count,
+        total_late_count=total_late_count,
+        selected_date=date.today(),
+        grades=list(range(1, 13)),
+        selected_grade=selected_grade
+    )
+
+
 
 @app.route("/calendar")
 def calendar():
-    if current_user.role == "admin":
-        events = Event.query.all()
-        events_list = [event.to_dict() for event in events]
-        return render_template("calendar.html")
-    else:
-        return redirect("/unauthorized")
+    events = Event.query.all()
+    events_list = [event.to_dict() for event in events]
+    return render_template("calendar.html")
+
 
 if __name__ == "__main__":
      app.run(debug=True)
